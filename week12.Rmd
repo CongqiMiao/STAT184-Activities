@@ -1,0 +1,59 @@
+---
+title: "week 12 Activity"
+author: "CONGQI MIAO"
+date: "April 8, 2022"
+output: html_notebook
+---
+
+### Load Packages
+```{r}
+library(tidyverse)
+```
+
+### Read in Data 
+```{r}
+df <- as.data.frame(matrix(readLines("Data_RegEx2.txt"), ncol = 16, byrow = T))
+```
+
+### First clean
+```{r}
+names(df) <- c("Position", "Player", "FinalScore", "THRU",
+               "TODAY", "SGPutt", "SGARG", "SGAPP", "SGOTT",
+               "SGT2G", "SGTOT", "DrDist", "DrAcc", "GIR",
+               "FairProx", "Scrambling")
+
+df_new <- df %>% separate(Player, c('Last', 'First'), sep = "\\s+(?=\\S*$)") %>% 
+  unite("unite", First:Last, sep = " ") %>% 
+  filter(Position != "WD")
+
+df_new[df_new == '_'] = NA
+
+head(df_new)
+tail(df_new)
+```
+### Second clean
+```{r}
+df_new$SGTOT <- as.numeric(paste(df_new$SGTOT))
+df_new$GIR <- as.numeric(paste(gsub("%","",df_new$GIR)))
+
+df_new <- df_new %>% mutate(Cut = ifelse(Position != "CUT", "Made Cut", "Missed Cut"))
+```
+
+### First plot
+```{r}
+ggplot(df_new, aes(Cut, SGTOT, color = Cut)) +
+  geom_boxplot() +
+  labs(y = "Shots Gained Total", title = "Boxplot Shots Gained Total")
+
+```
+# Make cut tends to gain more shots
+
+### Second plot
+```{r}
+ggplot(df_new, aes(Cut, GIR, color = Cut)) +
+  geom_boxplot() +
+  labs(y = "Greens Hit in Regulation", title = "Boxplot Greens Hit in Regulation")
+```
+#Two cuts have similar gir, made cut are slightly higher. 
+# Working link
+https://github.com/CongqiMiao/STAT184-Activities.git
