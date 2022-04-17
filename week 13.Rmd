@@ -1,0 +1,89 @@
+---
+title: "Week 13 Activity"
+author: "CONGQI MIAO"
+date: "April 17, 2022"
+output: html_notebook
+---
+
+```{r}
+library(tidyverse)
+Data_RegEx3.csv <- read.csv("Data_RegEx3.csv")
+df <- Data_RegEx3.csv
+```
+
+
+### Create New variable year Based on First Four Digits of tourny_id
+```{r}
+df <- df %>% mutate(year = substr(tourney_id, 1, 4))
+head(df,3)
+tail(df,3)
+```
+
+### Separate ‘score’ variable into 5 columns based on ‘score’ results
+```{r}
+df <- df %>% 
+  mutate(Set = gsub(" *\\(.*?\\) *", "", score)) %>%
+  separate(Set, into=c("Set.1", "Set.2", "Set.3", "Set.4", "Set.5"), sep= " ")
+head(df,3)
+tail(df,3)
+```
+
+### Create new variable ’sets.played’by counting non-NAs in Set.1 through Set.5
+```{r}
+df <- df %>%  
+  mutate(setsplayed = factor(rowSums(!is.na(df[8:12])))) %>%
+  select(!c("Set.1", "Set.2", "Set.3", "Set.4", "Set.5"))
+head(df,3)
+tail(df,3)
+```
+
+### Create Density Plot of Minutes Played by Number of Sets Played
+```{r}
+ggplot(df, aes(minutes, fill = setsplayed, color = setsplayed)) +
+  geom_density() +
+  theme(legend.position = "top") +
+  labs(title = "Density Plots of Minutes Played Per Number of Sets Played",
+       x = "Minutes Played", y = "Density")
+
+```
+
+### Create Boxplot of Winner’s Age by Tournament Name
+```{r}
+df[df$tourney_name == "Us Open",]$tourney_name = "US Open"
+
+ggplot(df, 
+       aes(tourney_name, winner_age, color = tourney_name)) +
+  geom_boxplot() +
+  labs(title = " Boxplot Age of Winner in Grand Slam Events",
+       x = "Tournament Name", "Age of Winner",
+       color = "Tournament Name") 
+```
+
+### Counts of Matches Won by Top 5 IOC Membership per Tournament
+```{r}
+ggplot(df %>% group_by(tourney_name, winner_ioc) %>%
+         summarise(total_won = n()) %>%
+         top_n(n = 5, wt = total_won), 
+       aes(winner_ioc, total_won)) +
+  geom_point() +
+  facet_grid(tourney_name~.) +
+  theme_bw() +
+  labs(title = "Top 5 Olympic Memberships per Tournament",
+       x = "Winners Olympic Membership", y = "Tournaments Won")
+```
+
+### Counts of Matches Won by Top 2 IOC Membership per Year
+```{r}
+ggplot(df %>% group_by(year, winner_ioc) %>%
+         summarise(total_won = n()) %>%
+         top_n(n = 2, wt = total_won), 
+       aes(year, total_won, color = winner_ioc)) +
+  geom_point() +
+  theme_bw() +
+  labs(title = "Top 2 Olympic Memberships per Year",
+       x = "Year", y = "Tournaments Won",
+       color = "Olympic Memberships")
+
+```
+
+### GIthub pro https://github.com/CongqiMiao/STAT184-Activities.git
